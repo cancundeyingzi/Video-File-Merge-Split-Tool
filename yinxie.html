@@ -1,0 +1,1838 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频文件合并拆分工具 </title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .download-section {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8f1ff 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+            border: 1px solid #e0e8ff;
+        }
+
+        .download-title {
+            color: #4a5568;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .download-options {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .download-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.95em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 140px;
+            justify-content: center;
+        }
+
+        .download-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            text-decoration: none;
+            color: white;
+        }
+
+        .download-item:active {
+            transform: translateY(0);
+        }
+
+        .download-item.coming-soon {
+            background: #e0e0e0;
+            color: #999;
+            cursor: not-allowed;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .download-item.coming-soon:hover {
+            transform: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .download-note {
+            font-size: 0.85em;
+            color: #6b7280;
+            margin-top: 12px;
+            line-height: 1.4;
+        }
+
+        .system-info {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: #1976d2;
+        }
+
+        .dev-mode-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .dev-mode-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .dev-mode-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .dev-mode-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .dev-mode-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .dev-mode-slider {
+            background-color: #667eea;
+        }
+
+        input:checked + .dev-mode-slider:before {
+            transform: translateX(26px);
+        }
+
+        .debug-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            display: none;
+        }
+
+        .debug-info.show {
+            display: block;
+        }
+
+        .debug-info h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .debug-info pre {
+            color: #666;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            color: #666;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab.active {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #667eea;
+        }
+
+        .content {
+            display: none;
+        }
+
+        .content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #fafafa;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f5f3ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #f5f3ff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-info {
+            background: #f5f3ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .file-icon {
+            font-size: 1.5em;
+        }
+
+        .file-details {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .file-size {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            margin: 10px 5px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            text-decoration: none;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .button.secondary {
+            background: #e0e0e0;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .button.cancel {
+            background: #f44336;
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+        }
+
+        .progress {
+            background: #f0f0f0;
+            border-radius: 10px;
+            height: 25px;
+            margin: 20px 0;
+            overflow: hidden;
+            display: none;
+            position: relative;
+        }
+
+        .progress-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            width: 0;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .progress-details {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .result {
+            background: #e8f5e9;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result.error {
+            background: #ffebee;
+        }
+
+        .result h3 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+
+        .result.error h3 {
+            color: #c62828;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 0.9em;
+        }
+
+        .warning strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .format-support {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+
+        .memory-warning {
+            background: #ffecb3;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #8a6914;
+        }
+
+        .processing-mode {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        .mode-option {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .mode-option.active {
+            border-color: #667eea;
+            background: #f5f3ff;
+        }
+
+        .mode-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f5f5f5;
+        }
+
+        .mode-option h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .mode-option p {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .filename-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 0.85em;
+        }
+
+        .browser-compatibility {
+            background: #e8f5e9;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 0.9em;
+            color: #2e7d32;
+        }
+
+        .browser-compatibility.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .version-badge {
+            background: #4caf50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+
+        .v3-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🎬 视频文件合并拆分工具 <span class="v3-badge">网页版</span></h1>
+
+        <div class="download-section">
+            <div class="download-title">💾 客户端下载</div>
+            <div class="download-options">
+                <a href="#" class="download-item" onclick="downloadWindows()">
+                    🪟 Windows 版本
+                </a>
+                <span class="download-item coming-soon">
+                    🤖Android 版本
+                    <small style="font-size: 0.8em;">(即将推出)</small>
+                </span>
+                <a href="#" class="download-item" onclick="downloadLinux()">
+                    🐧 Linux 版本(自行编译测试)
+                </a>
+            </div>
+            <div class="download-note">
+                📝 桌面版本支持更大文件处理,目前仍在测试中，可能有不兼容问题
+            </div>
+        </div>
+
+        <div class="system-info" id="systemInfo">
+            <strong>🔍 系统检测：</strong>正在检测浏览器兼容性和系统资源...
+        </div>
+
+        <div class="dev-mode-toggle">
+            <span>🔧 开发模式：</span>
+            <label class="dev-mode-switch">
+                <input type="checkbox" id="devModeToggle" onchange="toggleDevMode()">
+                <span class="dev-mode-slider"></span>
+            </label>
+            <span id="devModeStatus">关闭</span>
+        </div>
+
+        <div class="debug-info" id="debugInfo">
+            <h4>🔧 调试信息</h4>
+            <pre id="debugContent"></pre>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('merge')">合并文件</button>
+            <button class="tab" onclick="switchTab('split')">拆分文件</button>
+        </div>
+
+        <!-- 合并文件标签页 -->
+        <div id="merge" class="content active">
+            <div class="format-support">
+                <strong>📋 兼容性：</strong>
+                <p>✅测试通过 mp4,mkv,avi</p>
+                <p style="font-size: 0.8em; color: #666; margin-top: 5px;">⚠️ 其他格式传入后，不一定可以播放,也可测试非视频文件,但是未经过任何验证</p>
+            </div>
+
+            <div class="upload-area" onclick="document.getElementById('videoInput').click()"
+                ondrop="handleDrop(event, 'video')" ondragover="handleDragOver(event)"
+                ondragleave="handleDragLeave(event)">
+                <div class="upload-icon">🎥</div>
+                <p>点击或拖拽上传视频文件</p>
+                <p style="font-size: 0.85em; color: #999; margin-top: 5px;">支持：MP4, MKV, AVI, WebM, MOV, WMV等</p>
+                <input type="file" id="videoInput" class="file-input" accept="video/*,.mkv,.avi,.mp4,.mov,.wmv,.webm"
+                    onchange="handleVideoSelect(event)">
+            </div>
+
+            <div id="videoInfo" style="display: none;"></div>
+
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()"
+                ondrop="handleDrop(event, 'file')" ondragover="handleDragOver(event)"
+                ondragleave="handleDragLeave(event)">
+                <div class="upload-icon">📁</div>
+                <p>点击或拖拽上传任意文件</p>
+                <input type="file" id="fileInput" class="file-input" onchange="handleFileSelect(event)">
+            </div>
+
+            <div id="fileInfo" style="display: none;"></div>
+
+            <div class="processing-mode" id="processingMode" style="display: none;">
+                <div class="mode-option active" onclick="selectMode('memory')" data-mode="memory">
+                    <h4>🚀 内存模式</h4>
+                    <p>适合小文件（&lt;1GB）</p>
+                </div>
+                <div class="mode-option" onclick="selectMode('stream')" data-mode="stream">
+                    <h4>💾 流式模式</h4>
+                    <p>适合大文件，低内存</p>
+                </div>
+            </div>
+
+            <div id="memoryWarning" class="memory-warning" style="display: none;"></div>
+
+            <button class="button" onclick="mergeFiles()" id="mergeBtn" style="display: none;">
+                开始合并
+            </button>
+            <button class="button cancel" onclick="cancelOperation()" id="cancelBtn" style="display: none;">
+                取消操作
+            </button>
+
+            <div class="progress" id="mergeProgress">
+                <div class="progress-bar" id="mergeProgressBar">0%</div>
+            </div>
+            <div class="progress-details" id="mergeProgressDetails"></div>
+
+            <div class="result" id="mergeResult"></div>
+        </div>
+
+        <!-- 拆分文件标签页 -->
+        <div id="split" class="content">
+            <div class="upload-area" onclick="document.getElementById('mergedInput').click()"
+                ondrop="handleDrop(event, 'merged')" ondragover="handleDragOver(event)"
+                ondragleave="handleDragLeave(event)">
+                <div class="upload-icon">📦</div>
+                <p>点击或拖拽上传合并后的文件</p>
+                <p style="font-size: 0.85em; color: #999; margin-top: 5px;">⚠️ 超快固定位置解析</p>
+                <input type="file" id="mergedInput" class="file-input" onchange="handleMergedSelect(event)">
+            </div>
+
+            <div id="mergedInfo" style="display: none;"></div>
+
+            <button class="button" onclick="splitFiles()" id="splitBtn" style="display: none;">
+                开始拆分
+            </button>
+            <button class="button cancel" onclick="cancelOperation()" id="splitCancelBtn" style="display: none;">
+                取消操作
+            </button>
+
+            <div class="progress" id="splitProgress">
+                <div class="progress-bar" id="splitProgressBar">0%</div>
+            </div>
+            <div class="progress-details" id="splitProgressDetails"></div>
+
+            <div class="result" id="splitResult"></div>
+        </div>
+    </div>
+
+    <script>
+        let videoFile = null;
+        let attachFile = null;
+        let mergedFile = null;
+        let processingMode = 'memory';
+        let currentOperation = null;
+        let blobUrls = []; // 跟踪创建的URL以便清理
+        let devMode = false; // 开发模式状态
+
+        // 格式系统配置 
+        const CONFIG = {
+            MAGIC_BYTES_V3: new TextEncoder().encode("MERGEDv3"), // 8字节
+            MAGIC_LENGTH_V3: 8,
+            
+            SIZE_LENGTH: 8, // 使用8字节(uint64)大小字段
+            UINT32_LENGTH: 4, // 文件名长度字段仍使用4字节
+            CHUNK_SIZE: 1024 * 1024, // 1MB
+            MAX_MEMORY_MODE_SIZE: 1024 * 1024 * 1024, // 1GB - 内存模式限制
+            MAX_FILENAME_LENGTH: 255, // 文件名长度限制
+            PROGRESS_THROTTLE: 100, // 进度更新间隔(ms)
+            MAX_BLOB_CHUNKS: 10000, // Safari兼容性限制
+            MIN_V3_FILE_SIZE: 24, // 最小文件大小检查
+        };
+
+        // 下载Windows版本的函数
+        function downloadWindows() {
+            // 这里可以替换为实际的下载链接
+            const downloadUrl = 'https://github.com/your-repo/releases/latest/download/video-merger-v3-windows.exe';
+            
+            // 创建一个临时的下载链接
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = 'video-merger-v3-windows.exe';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // 添加调试信息
+            addDebugInfo('开始下载Windows版本');
+            
+            // 显示下载提示
+            const downloadSection = document.querySelector('.download-section');
+            const originalContent = downloadSection.innerHTML;
+            
+            downloadSection.innerHTML = `
+                <div class="download-title">📥 正在下载 Windows 版本...</div>
+                <div style="color: #666; font-size: 0.9em; padding: 10px;">
+                    如果下载没有开始，请检查浏览器的下载设置或直接访问发布页面
+                </div>
+            `;
+            
+            // 3秒后恢复原来的内容
+            setTimeout(() => {
+                downloadSection.innerHTML = originalContent;
+            }, 3000);
+        }
+
+        // 浏览器兼容性检测
+        const BROWSER_SUPPORT = {
+            isSupported: true,
+            features: {
+                fileAPI: typeof FileReader !== 'undefined',
+                streams: typeof ReadableStream !== 'undefined',
+                workers: typeof Worker !== 'undefined',
+                blob: typeof Blob !== 'undefined',
+                bigint: typeof BigInt !== 'undefined'
+            },
+            browser: detectBrowser(),
+            warnings: []
+        };
+
+        function detectBrowser() {
+            const ua = navigator.userAgent;
+            if (ua.includes('Chrome')) return 'Chrome';
+            if (ua.includes('Firefox')) return 'Firefox';
+            if (ua.includes('Safari') && !ua.includes('Chrome')) return 'Safari';
+            if (ua.includes('Edge')) return 'Edge';
+            if (ua.includes('MSIE') || ua.includes('Trident')) return 'IE';
+            return 'Unknown';
+        }
+
+        // 调试信息管理
+        function addDebugInfo(info) {
+            if (!devMode) return;
+            
+            const debugContent = document.getElementById('debugContent');
+            const timestamp = new Date().toLocaleTimeString();
+            debugContent.textContent += `[${timestamp}] ${info}\n`;
+            
+            // 自动滚动到底部
+            const debugInfo = document.getElementById('debugInfo');
+            debugInfo.scrollTop = debugInfo.scrollHeight;
+        }
+
+        function clearDebugInfo() {
+            document.getElementById('debugContent').textContent = '';
+        }
+
+        function toggleDevMode() {
+            devMode = document.getElementById('devModeToggle').checked;
+            const debugInfo = document.getElementById('debugInfo');
+            const statusText = document.getElementById('devModeStatus');
+            
+            if (devMode) {
+                debugInfo.classList.add('show');
+                statusText.textContent = '开启';
+                addDebugInfo('🔧 开发模式已启用，将显示详细调试信息');
+            } else {
+                debugInfo.classList.remove('show');
+                statusText.textContent = '关闭';
+                clearDebugInfo();
+            }
+        }
+
+        // 初始化系统检测
+        function initializeSystem() {
+            const systemInfo = document.getElementById('systemInfo');
+            const warnings = [];
+
+            // 检测内存
+            const memory = navigator.deviceMemory || 'unknown';
+            const estimatedMemory = memory !== 'unknown' ? `${memory}GB` : '未知';
+
+            // 检测浏览器兼容性
+            if (BROWSER_SUPPORT.browser === 'Safari') {
+                warnings.push('Safari浏览器对大文件处理有限制，建议使用Chrome或Firefox');
+            }
+            if (BROWSER_SUPPORT.browser === 'IE') {
+                warnings.push('不支持IE浏览器，请使用现代浏览器');
+                BROWSER_SUPPORT.isSupported = false;
+            }
+
+            // 检测必要的API
+            if (!BROWSER_SUPPORT.features.fileAPI) {
+                warnings.push('浏览器不支持文件API');
+                BROWSER_SUPPORT.isSupported = false;
+            }
+            
+            if (!BROWSER_SUPPORT.features.bigint) {
+                warnings.push('浏览器不支持BigInt，可能无法处理超大文件');
+            }
+
+            let html = `
+                <strong>🔍 系统检测：</strong>
+                浏览器：${BROWSER_SUPPORT.browser} | 
+                设备内存：${estimatedMemory} | 
+                兼容性：${BROWSER_SUPPORT.isSupported ? '✅ 良好' : '❌ 不支持'}
+            `;
+
+            if (warnings.length > 0) {
+                html += `<br><strong>⚠️ 警告：</strong>${warnings.join('；')}`;
+                systemInfo.className = 'system-info browser-compatibility warning';
+            }
+
+            systemInfo.innerHTML = html;
+            
+            addDebugInfo(`系统初始化完成: 浏览器=${BROWSER_SUPPORT.browser}, 内存=${estimatedMemory}, BigInt支持=${BROWSER_SUPPORT.features.bigint}`);
+        }
+
+        // 格式检测
+        async function isV3MergedFile(file) {
+            try {
+                addDebugInfo(`检测格式: 文件大小=${file.size}`);
+                
+                // 检查最小文件大小
+                if (file.size < CONFIG.MIN_V3_FILE_SIZE) {
+                    addDebugInfo(`文件太小: ${file.size} < ${CONFIG.MIN_V3_FILE_SIZE}`);
+                    return false;
+                }
+
+                // 读取末尾9字节检查魔术字节
+                const magicBuffer = await readFileChunk(file, 
+                    file.size - CONFIG.MAGIC_LENGTH_V3, file.size);
+                const magicBytes = new Uint8Array(magicBuffer);
+                
+                let isV3 = true;
+                for (let i = 0; i < CONFIG.MAGIC_BYTES_V3.length; i++) {
+                    if (magicBytes[i] !== CONFIG.MAGIC_BYTES_V3[i]) {
+                        isV3 = false;
+                        break;
+                    }
+                }
+                
+                const magicString = new TextDecoder().decode(magicBytes);
+                addDebugInfo(`魔术字节检测: "${magicString}" vs "MERGEDv3" => ${isV3}`);
+                
+                return isV3;
+            } catch (error) {
+                addDebugInfo(`格式检测失败: ${error.message}`);
+                return false;
+            }
+        }
+
+        // 文件名验证和清理
+        function validateAndCleanFilename(filename) {
+            addDebugInfo(`文件名清理前: "${filename}"`);
+            
+            if (!filename || filename.length === 0) {
+                throw new Error('文件名不能为空');
+            }
+
+            // 移除或替换非法字符
+            const cleaned = filename
+                .replace(/[<>:"/\\|?*\x00-\x1f]/g, '_') // 替换Windows非法字符
+                .replace(/^\.+/, '') // 移除开头的点
+                .substring(0, CONFIG.MAX_FILENAME_LENGTH); // 限制长度
+
+            if (cleaned.length === 0) {
+                throw new Error('文件名包含过多非法字符');
+            }
+            
+            addDebugInfo(`文件名清理后: "${cleaned}"`);
+            return cleaned;
+        }
+
+        // 内存使用估算
+        function estimateMemoryUsage(totalSize, mode) {
+            const estimated = mode === 'memory' ? totalSize * 2.5 : Math.min(CONFIG.CHUNK_SIZE * 10, totalSize * 0.1);
+            addDebugInfo(`内存估算: 模式=${mode}, 文件大小=${totalSize}, 预计内存=${estimated}`);
+            return estimated;
+        }
+
+        // 进度更新节流
+        let lastProgressUpdate = 0;
+        function updateProgress(progressBar, progressDetails, percent, text, details = '') {
+            const now = Date.now();
+            if (now - lastProgressUpdate < CONFIG.PROGRESS_THROTTLE && percent < 100) {
+                return;
+            }
+            lastProgressUpdate = now;
+
+            progressBar.style.width = percent + '%';
+            progressBar.textContent = Math.round(percent) + '%';
+            if (progressDetails) {
+                progressDetails.textContent = `${text} ${details}`;
+            }
+        }
+
+        // 安全的Blob URL创建和管理
+        function createBlobUrl(blob) {
+            const url = URL.createObjectURL(blob);
+            blobUrls.push(url);
+            addDebugInfo(`创建Blob URL: 大小=${blob.size}, URL=${url.substring(0, 50)}...`);
+            return url;
+        }
+
+        function cleanupBlobUrls() {
+            addDebugInfo(`清理${blobUrls.length}个Blob URL`);
+            blobUrls.forEach(url => {
+                try {
+                    URL.revokeObjectURL(url);
+                } catch (e) {
+                    console.warn('Failed to revoke URL:', e);
+                }
+            });
+            blobUrls = [];
+        }
+
+        // 延迟清理URL，给下载足够时间
+        function scheduleCleanup(url, delay = 30000) {
+            setTimeout(() => {
+                try {
+                    URL.revokeObjectURL(url);
+                    const index = blobUrls.indexOf(url);
+                    if (index > -1) {
+                        blobUrls.splice(index, 1);
+                    }
+                    addDebugInfo(`延迟清理Blob URL: ${url.substring(0, 50)}...`);
+                } catch (e) {
+                    console.warn('Failed to revoke URL:', e);
+                }
+            }, delay);
+        }
+
+        // 页面卸载时清理资源
+        window.addEventListener('beforeunload', cleanupBlobUrls);
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tab).classList.add('active');
+
+            // 切换标签时取消当前操作
+            cancelOperation();
+            addDebugInfo(`切换到标签页: ${tab}`);
+        }
+
+        function selectMode(mode) {
+            if (document.querySelector(`[data-mode="${mode}"]`).classList.contains('disabled')) {
+                return;
+            }
+            
+            processingMode = mode;
+            document.querySelectorAll('.mode-option').forEach(option => {
+                option.classList.toggle('active', option.dataset.mode === mode);
+            });
+            addDebugInfo(`选择处理模式: ${mode}`);
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(event) {
+            event.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(event, type) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('dragover');
+
+            const file = event.dataTransfer.files[0];
+            if (file) {
+                addDebugInfo(`拖拽文件: 类型=${type}, 文件名=${file.name}, 大小=${file.size}`);
+                if (type === 'video') {
+                    handleVideoFile(file);
+                } else if (type === 'file') {
+                    handleAttachFile(file);
+                } else if (type === 'merged') {
+                    handleMergedFile(file);
+                }
+            }
+        }
+
+        function handleVideoSelect(event) {
+            const file = event.target.files[0];
+            if (file) handleVideoFile(file);
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) handleAttachFile(file);
+        }
+
+        function handleMergedSelect(event) {
+            const file = event.target.files[0];
+            if (file) handleMergedFile(file);
+        }
+
+        function validateFile(file, type) {
+            if (!file) {
+                throw new Error('文件为空');
+            }
+
+            if (file.size === 0) {
+                throw new Error('不能处理空文件');
+            }
+
+            // 文件大小限制（根据浏览器调整）
+            const maxSize = BROWSER_SUPPORT.browser === 'Safari' ? 2 * 1024 * 1024 * 1024 : 8 * 1024 * 1024 * 1024; // Safari 2GB, 其他 8GB
+            if (file.size > maxSize) {
+                throw new Error(`文件过大，超过 ${formatFileSize(maxSize)} 限制`);
+            }
+
+            addDebugInfo(`文件验证通过: 类型=${type}, 大小=${file.size}`);
+            return true;
+        }
+
+        function handleVideoFile(file) {
+            try {
+                validateFile(file, 'video');
+                videoFile = file;
+                
+                const info = document.getElementById('videoInfo');
+                const ext = getFileExtension(file.name);
+                
+                let warningHtml = '';
+                const formatWarnings = {
+                    'mov': 'MOV格式封装严格，合并后可能无法播放。建议转换为MP4格式。',
+                    'wmv': 'WMV格式可能不兼容，建议使用MP4或MKV格式。',
+                    'flv': 'FLV格式不推荐使用，很可能无法正常播放。'
+                };
+                
+                if (formatWarnings[ext]) {
+                    warningHtml = `<div class="warning"><strong>⚠️ 格式警告：</strong>${formatWarnings[ext]}</div>`;
+                }
+
+                info.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-icon">🎥</div>
+                        <div class="file-details">
+                            <div class="file-name">${file.name}</div>
+                            <div class="file-size">${formatFileSize(file.size)}</div>
+                        </div>
+                    </div>
+                    ${warningHtml}
+                `;
+                info.style.display = 'block';
+                checkMergeReady();
+                
+                addDebugInfo(`视频文件选择: ${file.name}, ${file.size}字节`);
+            } catch (error) {
+                showError('视频文件错误', error.message);
+            }
+        }
+
+        function handleAttachFile(file) {
+            try {
+                validateFile(file, 'attach');
+                
+                // 验证文件名
+                validateAndCleanFilename(file.name);
+                
+                attachFile = file;
+                const info = document.getElementById('fileInfo');
+                
+                let filenameWarning = '';
+                if (file.name.length > 200) {
+                    filenameWarning = '<div class="filename-warning">⚠️ 文件名较长，将自动截断</div>';
+                }
+
+                info.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-icon">📄</div>
+                        <div class="file-details">
+                            <div class="file-name">${file.name}</div>
+                            <div class="file-size">${formatFileSize(file.size)}</div>
+                        </div>
+                    </div>
+                    ${filenameWarning}
+                `;
+                info.style.display = 'block';
+                checkMergeReady();
+                
+                addDebugInfo(`附加文件选择: ${file.name}, ${file.size}字节`);
+            } catch (error) {
+                showError('附加文件错误', error.message);
+            }
+        }
+
+        async function handleMergedFile(file) {
+            try {
+                validateFile(file, 'merged');
+                mergedFile = file;
+                
+                // 检测是否为格式
+                const isV3 = await isV3MergedFile(file);
+                
+                const info = document.getElementById('mergedInfo');
+                let formatInfo = '';
+                if (isV3) {
+                    formatInfo = '<div style="color: #2e7d32; font-size: 0.9em;">✅ 检测到格式文件</div>';
+                } else {
+                    formatInfo = '<div style="color: #f57c00; font-size: 0.9em;">⚠️ 未检测到格式，建议启用开发模式查看详细信息</div>';
+                }
+                
+                info.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-icon">📦</div>
+                        <div class="file-details">
+                            <div class="file-name">${file.name}</div>
+                            <div class="file-size">${formatFileSize(file.size)}</div>
+                        </div>
+                    </div>
+                    ${formatInfo}
+                `;
+                info.style.display = 'block';
+                document.getElementById('splitBtn').style.display = 'inline-block';
+                
+                addDebugInfo(`合并文件选择: ${file.name}, ${file.size}字节, 格式=${isV3}`);
+            } catch (error) {
+                showError('合并文件错误', error.message);
+            }
+        }
+
+        function checkMergeReady() {
+            if (videoFile && attachFile) {
+                const totalSize = videoFile.size + attachFile.size;
+                const processingModeEl = document.getElementById('processingMode');
+                const memoryWarning = document.getElementById('memoryWarning');
+                
+                processingModeEl.style.display = 'flex';
+
+                // 根据文件大小和系统内存智能推荐模式
+                const estimatedMemory = estimateMemoryUsage(totalSize, 'memory');
+                const deviceMemory = (navigator.deviceMemory || 4) * 1024 * 1024 * 1024; // 默认4GB
+                
+                let warningHtml = '';
+                
+                if (totalSize > CONFIG.MAX_MEMORY_MODE_SIZE || estimatedMemory > deviceMemory * 0.5) {
+                    // 禁用内存模式
+                    document.querySelector('[data-mode="memory"]').classList.add('disabled');
+                    selectMode('stream');
+                    warningHtml = `
+                        <strong>⚠️ 自动选择流式模式：</strong><br>
+                        文件总大小：${formatFileSize(totalSize)}<br>
+                        预计内存需求：${formatFileSize(estimatedMemory)}<br>
+                        超过内存模式限制，已自动切换为流式模式以确保稳定性
+                    `;
+                } else {
+                    warningHtml = `
+                        <strong>💡 处理信息：</strong><br>
+                        文件总大小：${formatFileSize(totalSize)}<br>
+                        预计内存需求：${formatFileSize(estimatedMemory)}<br>
+                        推荐使用${totalSize > 100 * 1024 * 1024 ? '流式' : '内存'}模式
+                    `;
+                }
+
+                memoryWarning.innerHTML = warningHtml;
+                memoryWarning.style.display = 'block';
+                
+                document.getElementById('mergeBtn').style.display = 'inline-block';
+                
+                addDebugInfo(`合并准备就绪: 总大小=${totalSize}, 推荐模式=${processingMode}`);
+            }
+        }
+
+        function getFileExtension(filename) {
+            return filename.split('.').pop().toLowerCase();
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function showError(title, message) {
+            const activeTab = document.querySelector('.content.active').id;
+            const resultEl = document.getElementById(activeTab === 'merge' ? 'mergeResult' : 'splitResult');
+            
+            resultEl.innerHTML = `<h3>❌ ${title}</h3><p>${message}</p>`;
+            resultEl.className = 'result error';
+            resultEl.style.display = 'block';
+            
+            addDebugInfo(`错误: ${title} - ${message}`);
+        }
+
+        function cancelOperation() {
+            if (currentOperation) {
+                currentOperation.cancelled = true;
+                currentOperation = null;
+                addDebugInfo('用户取消操作');
+            }
+            
+            // 隐藏进度条和取消按钮
+            document.getElementById('mergeProgress').style.display = 'none';
+            document.getElementById('splitProgress').style.display = 'none';
+            document.getElementById('cancelBtn').style.display = 'none';
+            document.getElementById('splitCancelBtn').style.display = 'none';
+            
+            // 启用操作按钮
+            document.getElementById('mergeBtn').disabled = false;
+            document.getElementById('splitBtn').disabled = false;
+        }
+
+        async function mergeFiles() {
+            if (processingMode === 'memory') {
+                await mergeFilesMemory();
+            } else {
+                await mergeFilesStream();
+            }
+        }
+
+        // 格式合并函数（内存模式）
+        async function mergeFilesMemory() {
+            const progressEl = document.getElementById('mergeProgress');
+            const progressBar = document.getElementById('mergeProgressBar');
+            const progressDetails = document.getElementById('mergeProgressDetails');
+            const resultEl = document.getElementById('mergeResult');
+            const mergeBtn = document.getElementById('mergeBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+
+            currentOperation = { cancelled: false };
+            mergeBtn.disabled = true;
+            cancelBtn.style.display = 'inline-block';
+            progressEl.style.display = 'block';
+            resultEl.style.display = 'none';
+
+            try {
+                addDebugInfo('开始内存模式合并');
+                
+                // 清理文件名
+                const cleanedAttachName = validateAndCleanFilename(attachFile.name);
+
+                updateProgress(progressBar, progressDetails, 5, '开始处理...', '准备读取文件');
+                
+                if (currentOperation.cancelled) throw new Error('操作已取消');
+
+                // 读取视频文件
+                addDebugInfo(`读取视频文件: ${videoFile.size}字节`);
+                updateProgress(progressBar, progressDetails, 10, '读取视频文件...', formatFileSize(0));
+                const videoBuffer = await readFileAsArrayBuffer(videoFile);
+                
+                if (currentOperation.cancelled) throw new Error('操作已取消');
+
+                addDebugInfo(`读取附加文件: ${attachFile.size}字节`);
+                updateProgress(progressBar, progressDetails, 40, '读取附加文件...', formatFileSize(videoFile.size));
+                const attachBuffer = await readFileAsArrayBuffer(attachFile);
+                
+                if (currentOperation.cancelled) throw new Error('操作已取消');
+
+                updateProgress(progressBar, progressDetails, 70, '创建格式...', '合并数据');
+
+                const encoder = new TextEncoder();
+                const attachNameBytes = encoder.encode(cleanedAttachName);
+
+                // 计算总大小
+                const metadataSize = CONFIG.UINT32_LENGTH + attachNameBytes.length + CONFIG.SIZE_LENGTH + CONFIG.SIZE_LENGTH + CONFIG.MAGIC_LENGTH_V3;
+                const totalSize = videoBuffer.byteLength + attachBuffer.byteLength + metadataSize;
+
+                addDebugInfo(`格式计算: 视频=${videoBuffer.byteLength}, 附加=${attachBuffer.byteLength}, 元数据=${metadataSize}, 总计=${totalSize}`);
+
+                const mergedArray = new Uint8Array(totalSize);
+                let offset = 0;
+
+                // 1. 写入视频文件内容
+                mergedArray.set(new Uint8Array(videoBuffer), offset);
+                offset += videoBuffer.byteLength;
+
+                // 2. 写入附加文件内容
+                mergedArray.set(new Uint8Array(attachBuffer), offset);
+                offset += attachBuffer.byteLength;
+
+                // 3. 写入文件名长度（4字节，小端序）
+                const nameLengthView = new DataView(new ArrayBuffer(CONFIG.UINT32_LENGTH));
+                nameLengthView.setUint32(0, attachNameBytes.length, true);
+                mergedArray.set(new Uint8Array(nameLengthView.buffer), offset);
+                offset += CONFIG.UINT32_LENGTH;
+
+                // 4. 写入文件名
+                mergedArray.set(attachNameBytes, offset);
+                offset += attachNameBytes.length;
+
+                // 5. 写入视频大小（8字节，小端序）
+                const videoSizeView = new DataView(new ArrayBuffer(CONFIG.SIZE_LENGTH));
+                videoSizeView.setBigUint64(0, BigInt(videoBuffer.byteLength), true);
+                mergedArray.set(new Uint8Array(videoSizeView.buffer), offset);
+                offset += CONFIG.SIZE_LENGTH;
+
+                // 6. 写入附加文件大小（8字节，小端序）
+                const attachSizeView = new DataView(new ArrayBuffer(CONFIG.SIZE_LENGTH));
+                attachSizeView.setBigUint64(0, BigInt(attachBuffer.byteLength), true);
+                mergedArray.set(new Uint8Array(attachSizeView.buffer), offset);
+                offset += CONFIG.SIZE_LENGTH;
+
+                // 7. 写入魔术字节 "MERGEDv3"
+                mergedArray.set(CONFIG.MAGIC_BYTES_V3, offset);
+
+                addDebugInfo(`格式写入完成: 最终偏移=${offset}, 期望=${totalSize}`);
+
+                if (currentOperation.cancelled) throw new Error('操作已取消');
+
+                updateProgress(progressBar, progressDetails, 95, '生成下载文件...', '创建输出');
+
+                const blob = new Blob([mergedArray], { type: 'application/octet-stream' });
+                const url = createBlobUrl(blob);
+
+                const outputName = videoFile.name.replace(/\.[^/.]+$/, '') + '_merged_v3' +
+                                 videoFile.name.substring(videoFile.name.lastIndexOf('.'));
+
+                updateProgress(progressBar, progressDetails, 100, '完成！', '');
+
+                // 安排30秒后清理URL，给下载足够时间
+                scheduleCleanup(url, 30000);
+
+                resultEl.innerHTML = `
+                    <h3>✅ 格式合并完成！</h3>
+                    <p>视频大小：${formatFileSize(videoBuffer.byteLength)}</p>
+                    <p>附加文件：${cleanedAttachName} (${formatFileSize(attachBuffer.byteLength)})</p>
+                    <p>合并后大小：${formatFileSize(totalSize)}</p>
+                    <div style="margin: 20px 0; padding: 15px; background: #f0f8ff; border-radius: 8px;">
+                        <a href="${url}" download="${outputName}" class="button">📥 下载合并文件</a>
+                        <p style="font-size: 0.85em; color: #666; margin-top: 10px;">
+                            💡 下载提示：如果下载没有开始，请检查浏览器的下载设置或弹窗拦截器
+                        </p>
+                    </div>
+                `;
+                resultEl.className = 'result';
+                resultEl.style.display = 'block';
+
+                setTimeout(() => {
+                    progressEl.style.display = 'none';
+                }, 1000);
+
+                addDebugInfo('内存模式合并成功完成');
+
+            } catch (error) {
+                if (error.message !== '操作已取消') {
+                    showError('合并失败', error.message);
+                }
+            } finally {
+                mergeBtn.disabled = false;
+                cancelBtn.style.display = 'none';
+                currentOperation = null;
+            }
+        }
+
+        // 格式合并函数（流式模式）
+        async function mergeFilesStream() {
+            const progressEl = document.getElementById('mergeProgress');
+            const progressBar = document.getElementById('mergeProgressBar');
+            const progressDetails = document.getElementById('mergeProgressDetails');
+            const resultEl = document.getElementById('mergeResult');
+            const mergeBtn = document.getElementById('mergeBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+
+            currentOperation = { cancelled: false };
+            mergeBtn.disabled = true;
+            cancelBtn.style.display = 'inline-block';
+            progressEl.style.display = 'block';
+            resultEl.style.display = 'none';
+
+            try {
+                addDebugInfo('开始流式模式合并');
+                
+                const cleanedAttachName = validateAndCleanFilename(attachFile.name);
+                const encoder = new TextEncoder();
+                const attachNameBytes = encoder.encode(cleanedAttachName);
+
+                updateProgress(progressBar, progressDetails, 5, '初始化流式处理...', '');
+
+                const chunks = [];
+                let processedSize = 0;
+                
+                // 计算元数据大小
+                const metadataSize = CONFIG.UINT32_LENGTH + attachNameBytes.length + CONFIG.SIZE_LENGTH + CONFIG.SIZE_LENGTH + CONFIG.MAGIC_LENGTH_V3;
+                const totalSize = videoFile.size + attachFile.size + metadataSize;
+
+                addDebugInfo(`流式处理: 总大小=${totalSize}, 元数据=${metadataSize}`);
+
+                // 限制分块数量以兼容Safari
+                const actualChunkSize = Math.max(CONFIG.CHUNK_SIZE, 
+                    Math.ceil(totalSize / CONFIG.MAX_BLOB_CHUNKS));
+
+                // 处理视频文件
+                updateProgress(progressBar, progressDetails, 10, '流式处理视频...', '');
+                for (let i = 0; i < videoFile.size; i += actualChunkSize) {
+                    if (currentOperation.cancelled) throw new Error('操作已取消');
+                    
+                    const chunk = await readFileChunk(videoFile, i, Math.min(i + actualChunkSize, videoFile.size));
+                    chunks.push(chunk);
+                    processedSize += chunk.byteLength;
+
+                    const progress = 10 + Math.round((processedSize / totalSize) * 40);
+                    updateProgress(progressBar, progressDetails, progress, '处理视频...', 
+                        `${formatFileSize(processedSize)} / ${formatFileSize(totalSize)}`);
+                }
+
+                // 处理附加文件
+                updateProgress(progressBar, progressDetails, 55, '流式处理附加文件...', '');
+                for (let i = 0; i < attachFile.size; i += actualChunkSize) {
+                    if (currentOperation.cancelled) throw new Error('操作已取消');
+                    
+                    const chunk = await readFileChunk(attachFile, i, Math.min(i + actualChunkSize, attachFile.size));
+                    chunks.push(chunk);
+                    processedSize += chunk.byteLength;
+
+                    const progress = 55 + Math.round(((processedSize - videoFile.size) / attachFile.size) * 25);
+                    updateProgress(progressBar, progressDetails, progress, '处理附加文件...', 
+                        `${formatFileSize(processedSize)} / ${formatFileSize(totalSize)}`);
+                }
+
+                // 创建格式元数据
+                updateProgress(progressBar, progressDetails, 85, '创建元数据...', '');
+                const metadata = new Uint8Array(metadataSize);
+                let metaOffset = 0;
+
+                // 文件名长度(4字节)
+                const nameLengthView = new DataView(new ArrayBuffer(CONFIG.UINT32_LENGTH));
+                nameLengthView.setUint32(0, attachNameBytes.length, true);
+                metadata.set(new Uint8Array(nameLengthView.buffer), metaOffset);
+                metaOffset += CONFIG.UINT32_LENGTH;
+
+                // 文件名
+                metadata.set(attachNameBytes, metaOffset);
+                metaOffset += attachNameBytes.length;
+
+                // 视频大小(8字节)
+                const videoSizeView = new DataView(new ArrayBuffer(CONFIG.SIZE_LENGTH));
+                videoSizeView.setBigUint64(0, BigInt(videoFile.size), true);
+                metadata.set(new Uint8Array(videoSizeView.buffer), metaOffset);
+                metaOffset += CONFIG.SIZE_LENGTH;
+
+                // 附加文件大小(8字节)
+                const attachSizeView = new DataView(new ArrayBuffer(CONFIG.SIZE_LENGTH));
+                attachSizeView.setBigUint64(0, BigInt(attachFile.size), true);
+                metadata.set(new Uint8Array(attachSizeView.buffer), metaOffset);
+                metaOffset += CONFIG.SIZE_LENGTH;
+
+                // 魔术字节
+                metadata.set(CONFIG.MAGIC_BYTES_V3, metaOffset);
+
+                chunks.push(metadata);
+                processedSize += metadata.byteLength;
+
+                addDebugInfo(`流式元数据创建完成: 分块数=${chunks.length}, 元数据大小=${metadata.byteLength}`);
+
+                updateProgress(progressBar, progressDetails, 95, '生成最终文件...', '');
+
+                const blob = new Blob(chunks, { type: 'application/octet-stream' });
+                const url = createBlobUrl(blob);
+
+                const outputName = videoFile.name.replace(/\.[^/.]+$/, '') + '_merged_v3' +
+                                 videoFile.name.substring(videoFile.name.lastIndexOf('.'));
+
+                updateProgress(progressBar, progressDetails, 100, '完成！', '');
+
+                // 安排30秒后清理URL，给下载足够时间
+                scheduleCleanup(url, 30000);
+
+                resultEl.innerHTML = `
+                    <h3>✅ 流式合并完成！</h3>
+                    <p>视频大小：${formatFileSize(videoFile.size)}</p>
+                    <p>附加文件：${cleanedAttachName} (${formatFileSize(attachFile.size)})</p>
+                    <p>合并后大小：${formatFileSize(totalSize)}</p>
+                    <div style="margin: 20px 0; padding: 15px; background: #f0f8ff; border-radius: 8px;">
+                        <a href="${url}" download="${outputName}" class="button">📥 下载合并文件</a>
+                        <p style="font-size: 0.85em; color: #666; margin-top: 10px;">
+                            💡 下载提示：如果下载没有开始，请检查浏览器的下载设置或弹窗拦截器
+                        </p>
+                    </div>
+                `;
+                resultEl.className = 'result';
+                resultEl.style.display = 'block';
+
+                setTimeout(() => {
+                    progressEl.style.display = 'none';
+                }, 1000);
+
+                addDebugInfo('流式模式合并成功完成');
+
+            } catch (error) {
+                if (error.message !== '操作已取消') {
+                    showError('流式合并失败', error.message);
+                }
+            } finally {
+                mergeBtn.disabled = false;
+                cancelBtn.style.display = 'none';
+                currentOperation = null;
+            }
+        }
+
+        function readFileChunk(file, start, end) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file.slice(start, end));
+            });
+        }
+
+        // 格式拆分函数
+        async function splitFiles() {
+            const progressEl = document.getElementById('splitProgress');
+            const progressBar = document.getElementById('splitProgressBar');
+            const progressDetails = document.getElementById('splitProgressDetails');
+            const resultEl = document.getElementById('splitResult');
+            const splitBtn = document.getElementById('splitBtn');
+            const cancelBtn = document.getElementById('splitCancelBtn');
+
+            currentOperation = { cancelled: false };
+            splitBtn.disabled = true;
+            cancelBtn.style.display = 'inline-block';
+            progressEl.style.display = 'block';
+            resultEl.style.display = 'none';
+
+            // 调试信息收集
+            let debugData = {
+                fileSize: mergedFile.size,
+                magicBytes: '',
+                videoSize: 0,
+                attachSize: 0,
+                filenameLength: 0,
+                filename: '',
+                positions: {},
+                errors: []
+            };
+
+            try {
+                addDebugInfo('开始格式拆分');
+                debugData.fileSize = mergedFile.size;
+
+                updateProgress(progressBar, progressDetails, 5, '格式解析...', '');
+
+                const fileSize = mergedFile.size;
+
+                // 1. 检查最小文件大小
+                if (fileSize < CONFIG.MIN_V3_FILE_SIZE) {
+                    const error = `文件太小: ${fileSize} < ${CONFIG.MIN_V3_FILE_SIZE}`;
+                    debugData.errors.push(error);
+                    throw new Error(error);
+                }
+
+                updateProgress(progressBar, progressDetails, 15, '固定位置读取...', '');
+
+                // 2. 读取魔术字节（末尾9字节）
+                debugData.positions.magicBytes = fileSize - CONFIG.MAGIC_LENGTH_V3;
+                const magicBuffer = await readFileChunk(mergedFile, 
+                    fileSize - CONFIG.MAGIC_LENGTH_V3, fileSize);
+                const magicBytes = new Uint8Array(magicBuffer);
+                debugData.magicBytes = new TextDecoder().decode(magicBytes);
+
+                addDebugInfo(`魔术字节位置: ${debugData.positions.magicBytes}, 内容: "${debugData.magicBytes}"`);
+
+                // 验证魔术字节
+                let isValidMagic = true;
+                for (let i = 0; i < CONFIG.MAGIC_BYTES_V3.length; i++) {
+                    if (magicBytes[i] !== CONFIG.MAGIC_BYTES_V3[i]) {
+                        isValidMagic = false;
+                        break;
+                    }
+                }
+
+                if (!isValidMagic) {
+                    const error = `魔术字节验证失败: 期望"MERGEDv3", 实际"${debugData.magicBytes}"`;
+                    debugData.errors.push(error);
+                    // 在开发模式下继续尝试解析
+                    if (!devMode) {
+                        throw new Error(error);
+                    }
+                    addDebugInfo('开发模式：忽略魔术字节错误，继续解析');
+                }
+
+                updateProgress(progressBar, progressDetails, 30, '读取文件大小...', '');
+
+                // 3. 读取附加文件大小（末尾-17到末尾-9，8字节）
+                debugData.positions.attachSize = fileSize - CONFIG.MAGIC_LENGTH_V3 - CONFIG.SIZE_LENGTH;
+                const attachSizeBuffer = await readFileChunk(mergedFile, 
+                    debugData.positions.attachSize, 
+                    fileSize - CONFIG.MAGIC_LENGTH_V3);
+                const attachSizeView = new DataView(attachSizeBuffer);
+                debugData.attachSize = Number(attachSizeView.getBigUint64(0, true));
+
+                addDebugInfo(`附加文件大小位置: ${debugData.positions.attachSize}, 大小: ${debugData.attachSize}`);
+
+                // 4. 读取视频大小（末尾-25到末尾-17，8字节）
+                debugData.positions.videoSize = fileSize - CONFIG.MAGIC_LENGTH_V3 - CONFIG.SIZE_LENGTH * 2;
+                const videoSizeBuffer = await readFileChunk(mergedFile, 
+                    debugData.positions.videoSize, 
+                    fileSize - CONFIG.MAGIC_LENGTH_V3 - CONFIG.SIZE_LENGTH);
+                const videoSizeView = new DataView(videoSizeBuffer);
+                debugData.videoSize = Number(videoSizeView.getBigUint64(0, true));
+
+                addDebugInfo(`视频文件大小位置: ${debugData.positions.videoSize}, 大小: ${debugData.videoSize}`);
+
+                updateProgress(progressBar, progressDetails, 50, '验证数据...', '');
+
+                // 5. 验证大小的合理性
+                if (debugData.videoSize <= 0 || debugData.videoSize >= fileSize) {
+                    const error = `视频文件大小异常: ${debugData.videoSize}`;
+                    debugData.errors.push(error);
+                    if (!devMode) {
+                        throw new Error(error);
+                    }
+                    addDebugInfo('开发模式：忽略视频大小错误，继续解析');
+                }
+
+                if (debugData.attachSize <= 0 || debugData.attachSize >= fileSize) {
+                    const error = `附加文件大小异常: ${debugData.attachSize}`;
+                    debugData.errors.push(error);
+                    if (!devMode) {
+                        throw new Error(error);
+                    }
+                    addDebugInfo('开发模式：忽略附加文件大小错误，继续解析');
+                }
+
+                updateProgress(progressBar, progressDetails, 65, '读取文件名...', '');
+
+                // 6. 计算并读取文件名
+                debugData.positions.metadataStart = debugData.videoSize + debugData.attachSize;
+                
+                addDebugInfo(`元数据开始位置: ${debugData.positions.metadataStart}`);
+
+                // 读取文件名长度（4字节）
+                const nameLengthBuffer = await readFileChunk(mergedFile, 
+                    debugData.positions.metadataStart, 
+                    debugData.positions.metadataStart + CONFIG.UINT32_LENGTH);
+                const nameLengthView = new DataView(nameLengthBuffer);
+                debugData.filenameLength = nameLengthView.getUint32(0, true);
+
+                addDebugInfo(`文件名长度: ${debugData.filenameLength}`);
+
+                // 验证文件名长度
+                if (debugData.filenameLength <= 0 || debugData.filenameLength > CONFIG.MAX_FILENAME_LENGTH) {
+                    const error = `文件名长度异常: ${debugData.filenameLength}`;
+                    debugData.errors.push(error);
+                    if (!devMode) {
+                        throw new Error(error);
+                    }
+                    addDebugInfo('开发模式：忽略文件名长度错误，继续解析');
+                }
+
+                // 读取文件名
+                if (debugData.filenameLength > 0 && debugData.filenameLength <= CONFIG.MAX_FILENAME_LENGTH) {
+                    const nameBuffer = await readFileChunk(mergedFile, 
+                        debugData.positions.metadataStart + CONFIG.UINT32_LENGTH, 
+                        debugData.positions.metadataStart + CONFIG.UINT32_LENGTH + debugData.filenameLength);
+                    debugData.filename = new TextDecoder().decode(nameBuffer);
+                    addDebugInfo(`文件名: "${debugData.filename}"`);
+                } else {
+                    debugData.filename = 'unknown_file.bin';
+                    addDebugInfo('使用默认文件名');
+                }
+
+                updateProgress(progressBar, progressDetails, 80, '验证文件结构...', '');
+
+                // 7. 验证总体文件结构
+                const expectedFileSize = debugData.videoSize + debugData.attachSize + 
+                                       CONFIG.UINT32_LENGTH + debugData.filenameLength + 
+                                       CONFIG.SIZE_LENGTH * 2 + CONFIG.MAGIC_LENGTH_V3;
+                
+                addDebugInfo(`文件大小验证: 期望=${expectedFileSize}, 实际=${fileSize}`);
+
+                if (expectedFileSize !== fileSize) {
+                    const error = `文件结构验证失败: 期望${expectedFileSize}, 实际${fileSize}`;
+                    debugData.errors.push(error);
+                    if (!devMode) {
+                        throw new Error(error);
+                    }
+                    addDebugInfo('开发模式：忽略文件结构错误，继续解析');
+                }
+
+                if (currentOperation.cancelled) throw new Error('操作已取消');
+
+                updateProgress(progressBar, progressDetails, 90, '创建提取文件...', '');
+
+                // 创建文件Blob（即使在错误情况下也尝试创建）
+                let videoBlob, attachBlob, videoUrl, attachUrl;
+                
+                try {
+                    videoBlob = mergedFile.slice(0, debugData.videoSize);
+                    attachBlob = mergedFile.slice(debugData.videoSize, debugData.videoSize + debugData.attachSize);
+                    
+                    videoUrl = createBlobUrl(videoBlob);
+                    attachUrl = createBlobUrl(attachBlob);
+                    
+                    scheduleCleanup(videoUrl, 30000);
+                    scheduleCleanup(attachUrl, 30000);
+                } catch (e) {
+                    debugData.errors.push(`创建Blob失败: ${e.message}`);
+                    addDebugInfo(`创建Blob失败: ${e.message}`);
+                }
+
+                updateProgress(progressBar, progressDetails, 100, '完成！', '');
+
+                const videoName = mergedFile.name.replace('_merged_v3', '').replace('_merged', '') || 'video.mp4';
+
+                // 显示结果（包含调试信息）
+                let resultHtml = '';
+                
+                if (debugData.errors.length === 0) {
+                    // 成功情况
+                    resultHtml = `
+                        <h3>✅ 格式拆分成功！</h3>
+                        <p>✓ 格式验证通过，固定位置读取完成</p>
+                        <p>找到 2 个文件：</p>
+                        <div style="margin-top: 15px;">
+                            <div style="margin: 15px 0; padding: 15px; background: #f0f8ff; border-radius: 8px;">
+                                <p><strong>视频文件：</strong>${formatFileSize(debugData.videoSize)}</p>
+                                <a href="${videoUrl}" download="${videoName}" class="button">📥 下载视频</a>
+                            </div>
+                            
+                            <div style="margin: 15px 0; padding: 15px; background: #f0f8ff; border-radius: 8px;">
+                                <p><strong>隐藏文件：</strong>${debugData.filename} (${formatFileSize(debugData.attachSize)})</p>
+                                <a href="${attachUrl}" download="${debugData.filename}" class="button">📥 下载文件</a>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // 错误情况（开发模式下仍然尝试提供下载）
+                    resultHtml = `
+                        <h3>⚠️ 格式解析遇到问题</h3>
+                        <p>发现 ${debugData.errors.length} 个问题，但已尝试提取文件：</p>
+                        <ul style="margin: 10px 0; color: #d32f2f;">
+                            ${debugData.errors.map(err => `<li>${err}</li>`).join('')}
+                        </ul>
+                    `;
+                    
+                    if (videoUrl && attachUrl) {
+                        resultHtml += `
+                            <div style="margin-top: 15px;">
+                                <p style="color: #f57c00;"><strong>⚠️ 尝试性提取（可能不完整）：</strong></p>
+                                <div style="margin: 15px 0; padding: 15px; background: #fff3cd; border-radius: 8px;">
+                                    <p><strong>视频文件：</strong>${formatFileSize(debugData.videoSize)}</p>
+                                    <a href="${videoUrl}" download="${videoName}" class="button secondary">📥 尝试下载视频</a>
+                                </div>
+                                
+                                <div style="margin: 15px 0; padding: 15px; background: #fff3cd; border-radius: 8px;">
+                                    <p><strong>文件：</strong>${debugData.filename} (${formatFileSize(debugData.attachSize)})</p>
+                                    <a href="${attachUrl}" download="${debugData.filename}" class="button secondary">📥 尝试下载文件</a>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+
+                // 添加开发模式调试信息
+                if (devMode) {
+                    resultHtml += `
+                        <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 8px; font-family: monospace; font-size: 0.85em;">
+                            <h4>🔧 格式调试信息</h4>
+                            <p><strong>文件大小：</strong>${debugData.fileSize} 字节</p>
+                            <p><strong>魔术字节：</strong>"${debugData.magicBytes}" (位置: ${debugData.positions.magicBytes})</p>
+                            <p><strong>视频大小：</strong>${debugData.videoSize} 字节 (位置: ${debugData.positions.videoSize})</p>
+                            <p><strong>附加文件大小：</strong>${debugData.attachSize} 字节 (位置: ${debugData.positions.attachSize})</p>
+                            <p><strong>文件名长度：</strong>${debugData.filenameLength}</p>
+                            <p><strong>文件名：</strong>"${debugData.filename}"</p>
+                            <p><strong>元数据开始：</strong>${debugData.positions.metadataStart}</p>
+                        </div>
+                    `;
+                }
+
+                resultHtml += `
+                    <p style="font-size: 0.85em; color: #666; margin-top: 15px;">
+                        💡 下载提示：如果下载没有开始，请检查浏览器的下载设置或弹窗拦截器
+                    </p>
+                `;
+
+                resultEl.innerHTML = resultHtml;
+                resultEl.className = debugData.errors.length === 0 ? 'result' : 'result error';
+                resultEl.style.display = 'block';
+
+                setTimeout(() => {
+                    progressEl.style.display = 'none';
+                }, 1000);
+
+                addDebugInfo(`拆分完成: 错误数=${debugData.errors.length}`);
+
+            } catch (error) {
+                if (error.message !== '操作已取消') {
+                    // 即使在错误情况下，也显示调试信息
+                    let errorHtml = `<h3>❌ 拆分失败</h3><p>${error.message}</p>`;
+                    
+                    if (devMode) {
+                        errorHtml += `
+                            <div style="margin-top: 20px; padding: 15px; background: #ffebee; border-radius: 8px; font-family: monospace; font-size: 0.85em;">
+                                <h4>🔧 错误时的调试信息</h4>
+                                <p><strong>文件大小：</strong>${debugData.fileSize} 字节</p>
+                                <p><strong>魔术字节：</strong>"${debugData.magicBytes}"</p>
+                                <p><strong>视频大小：</strong>${debugData.videoSize}</p>
+                                <p><strong>附加文件大小：</strong>${debugData.attachSize}</p>
+                                <p><strong>文件名长度：</strong>${debugData.filenameLength}</p>
+                                <p><strong>文件名：</strong>"${debugData.filename}"</p>
+                                <p><strong>检测到的错误：</strong></p>
+                                <ul>${debugData.errors.map(err => `<li>${err}</li>`).join('')}</ul>
+                            </div>
+                        `;
+                    }
+                    
+                    resultEl.innerHTML = errorHtml;
+                    resultEl.className = 'result error';
+                    resultEl.style.display = 'block';
+                }
+            } finally {
+                splitBtn.disabled = false;
+                cancelBtn.style.display = 'none';
+                currentOperation = null;
+            }
+        }
+
+        function readFileAsArrayBuffer(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // 初始化系统
+        initializeSystem();
+    </script>
+</body>
+
+</html>
