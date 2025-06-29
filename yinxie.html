@@ -691,8 +691,7 @@
 
         // 下载Windows版本的函数
         function downloadWindows() {
-            // 这里可以替换为实际的下载链接
-            const downloadUrl = 'https://github.com/your-repo/releases/latest/download/video-merger-v3-windows.exe';
+            const downloadUrl = 'https://github.com/cancundeyingzi/Video-File-Merge-Split-Tool/releases/tag/0.1';
             
             // 创建一个临时的下载链接
             const link = document.createElement('a');
@@ -716,6 +715,36 @@
                 </div>
             `;
             
+            // 3秒后恢复原来的内容
+            setTimeout(() => {
+                downloadSection.innerHTML = originalContent;
+            }, 3000);
+        }
+        function downloadLinux() {
+            const downloadUrl = 'https://github.com/cancundeyingzi/Video-File-Merge-Split-Tool';
+
+            // 创建一个临时的下载链接
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = 'video-merger-v3-windows.exe';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // 添加调试信息
+            addDebugInfo('开始下载Windows版本');
+
+            // 显示下载提示
+            const downloadSection = document.querySelector('.download-section');
+            const originalContent = downloadSection.innerHTML;
+
+            downloadSection.innerHTML = `
+                <div class="download-title">📥 正在下载 Windows 版本...</div>
+                <div style="color: #666; font-size: 0.9em; padding: 10px;">
+                    如果下载没有开始，请检查浏览器的下载设置或直接访问发布页面
+                </div>
+            `;
+
             // 3秒后恢复原来的内容
             setTimeout(() => {
                 downloadSection.innerHTML = originalContent;
