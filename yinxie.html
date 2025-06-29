@@ -691,7 +691,7 @@
 
         // 下载Windows版本的函数
         function downloadWindows() {
-            const downloadUrl = 'https://github.com/cancundeyingzi/Video-File-Merge-Split-Tool/releases/tag/0.1';
+            const downloadUrl = 'https://github.com/cancundeyingzi/Video-File-Merge-Split-Tool/releases/download/0.1/___go_build_main_go.exe';
             
             // 创建一个临时的下载链接
             const link = document.createElement('a');
@@ -732,16 +732,16 @@
             document.body.removeChild(link);
 
             // 添加调试信息
-            addDebugInfo('开始下载Windows版本');
+            addDebugInfo('开始打开页面');
 
             // 显示下载提示
             const downloadSection = document.querySelector('.download-section');
             const originalContent = downloadSection.innerHTML;
 
             downloadSection.innerHTML = `
-                <div class="download-title">📥 正在下载 Windows 版本...</div>
+                <div class="download-title">📥 正在打开页面...</div>
                 <div style="color: #666; font-size: 0.9em; padding: 10px;">
-                    如果下载没有开始，请检查浏览器的下载设置或直接访问发布页面
+                    如果没有开始，，，，，，不应该没开始啊，去github自己找吧
                 </div>
             `;
 
